@@ -13,21 +13,15 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) , ui(new Ui::MainW
     comm = new SerialComm();
     connectState = false;
 
-    connect(ui->btnConnect, SIGNAL(clicked()), this, SLOT(btnConnectClicked()));
-
-    updateTimer = new QTimer(this);
-    updateTimer->setInterval(1000);
-    connect(updateTimer, SIGNAL(timeout()), this, SLOT(updateTimeout()));
-
-    connect(comm->serial, SIGNAL(readyRead()), this, SLOT(readyRead()));
+	connect(ui->btnConnect, SIGNAL(clicked()), this, SLOT(btnConnectClicked()));
 
 	ui->plot->addGraph();
 	ui->plot->graph(0)->setScatterStyle(QCPScatterStyle::ssDot);
 	ui->plot->graph(0)->setLineStyle(QCPGraph::lsLine);
 
 	QPen blueDotPen;
-	blueDotPen.setColor(QColor(30, 40, 255, 150));
-	blueDotPen.setStyle(Qt::DotLine);
+	blueDotPen.setColor(QColor(0, 0, 255, 255));
+	blueDotPen.setStyle(Qt::SolidLine);
 	blueDotPen.setWidthF(4);
 	ui->plot->graph(0)->setPen(blueDotPen);
 	ui->plot->graph(0)->setName("Collision force");
@@ -36,6 +30,11 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) , ui(new Ui::MainW
 	ui->plot->replot();
 	ui->plot->xAxis->setLabel("Time [s]");
 	ui->plot->yAxis->setLabel("Force [N]");
+
+	time = 0;
+
+	connect(ui->btnStart, SIGNAL(clicked()), this, SLOT(btnStartClicked()));
+	connect(ui->btnSave, SIGNAL(clicked()), this, SLOT(btnSaveClicked()));
 }
 
 MainWindow::~MainWindow()
@@ -50,32 +49,57 @@ void MainWindow::btnConnectClicked()
     if (connectState){
         comm->disconnect();
         connectState = false;
-//        updateTimer->stop();
     }
     else{
         connectState = comm->connect(ui->comboPort->currentText(), ui->comboBaud->currentText());
-//        updateTimer->start();
+		disconnect(comm->serial, SIGNAL(readyRead()), this, SLOT(readyRead()));
+		ui->btnStart->setText("Start");
 
     }
     ui->btnConnect->setText(connectState ? "Disconnect" : "Connect");
 }
 
-void MainWindow::updateTimeout()
-{
-    ui->rbComState->toggle();
-
-    comm->writeread();
-}
-
 void MainWindow::readyRead(){
 	ui->rbComState->toggle();
 
-//    QString received;
-//    while(comm->serial->canReadLine()){
-//        qDebug() << comm->serial->canReadLine();
-//        received = comm->serial->readLine();
-//    }
-//    qDebug() << received;
 	QByteArray rxData = comm->serial->readAll();
-	qDebug() << rxData << ", " << rxData.length();
+	if (rxData.length() == 10){
+		qDebug() << rxData.split('\r')[0].toDouble();
+		x.push_back(time);
+		y.push_back(rxData.split('\r')[0].toDouble());
+		time += 0.01;
+
+		ui->plot->graph(0)->setData(x, y);
+		vector<double> x_temp, y_temp;
+		x_temp = x.toStdVector();
+		y_temp = y.toStdVector();
+		sort(y_temp.begin(), y_temp.end());
+
+		ui->plot->xAxis->setRange(x_temp.front(), x_temp.back());
+		ui->plot->yAxis->setRange(y_temp.front(), y_temp.back());
+
+		ui->plot->replot();
+	}
+}
+
+void MainWindow::btnStartClicked(){
+	if(ui->btnStart->text().compare("Start") == 0){
+		connect(comm->serial, SIGNAL(readyRead()), this, SLOT(readyRead()));
+		ui->btnStart->setText("Stop");
+	}
+	else if(ui->btnStart->text().compare("Stop") == 0){
+		disconnect(comm->serial, SIGNAL(readyRead()), this, SLOT(readyRead()));
+		ui->btnStart->setText("Start");
+	}
+}
+
+void MainWindow::btnSaveClicked(){
+	ui->btnSave->setEnabled(false);
+	FILE *fp;
+	fp = fopen("save_data.csv","w+");
+	for(int i = 0; i < x.length(); i++){
+		fprintf(fp, "%.7f,%.7f\n", x[i], y[i]);
+	}
+	fclose(fp);
+	ui->btnSave->setEnabled(true);
 }

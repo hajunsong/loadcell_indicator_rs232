@@ -6,6 +6,9 @@
 
 #include "serialcomm.h"
 
+#include <iostream>
+using namespace std;
+
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
@@ -21,10 +24,10 @@ public:
 public slots:
     // button event
     void btnConnectClicked();
+	void btnStartClicked();
+	void btnSaveClicked();
 
-    // timer event
-    void updateTimeout();
-
+	// comm event
     void readyRead();
 
 private:
@@ -35,5 +38,8 @@ private:
     bool connectState;
 
     QTimer *updateTimer;
+
+	QVector<double> x, y;
+	double time;
 };
 #endif // MAINWINDOW_H
