@@ -66,7 +66,7 @@ void MainWindow::readyRead(){
 	if (rxData.length() == 10){
 		qDebug() << rxData.split('\r')[0].toDouble();
 		x.push_back(time);
-		y.push_back(rxData.split('\r')[0].toDouble());
+        y.push_back(rxData.split('\r')[0].toDouble()*9.80665);
 		time += 0.01;
 
 		ui->plot->graph(0)->setData(x, y);
@@ -98,7 +98,7 @@ void MainWindow::btnSaveClicked(){
 	FILE *fp;
 	fp = fopen("save_data.csv","w+");
 	for(int i = 0; i < x.length(); i++){
-		fprintf(fp, "%.7f,%.7f\n", x[i], y[i]);
+        fprintf(fp, "%.7f,%.7f\n", x[i], y[i]*9.80665);
 	}
 	fclose(fp);
 	ui->btnSave->setEnabled(true);
