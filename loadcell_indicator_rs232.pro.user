@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE QtCreatorProject>
-<!-- Written by QtCreator 4.11.0, 2019-12-20T16:59:27. -->
+<!-- Written by QtCreator 4.11.0, 2020-06-02T05:41:21. -->
 <qtcreator>
  <data>
   <variable>EnvironmentId</variable>
-  <value type="QByteArray">{524df8af-0450-44f0-baca-8ded9b16cdfb}</value>
+  <value type="QByteArray">{6f4fcb03-f5a7-419f-acbc-cc61332189a2}</value>
  </data>
  <data>
   <variable>ProjectExplorer.Project.ActiveTarget</variable>
@@ -285,8 +285,8 @@
     </valuelist>
     <value type="int" key="PE.EnvironmentAspect.Base">2</value>
     <valuelist type="QVariantList" key="PE.EnvironmentAspect.Changes"/>
-    <value type="QString" key="ProjectExplorer.ProjectConfiguration.Id">Qt4ProjectManager.Qt4RunConfiguration:/home/keti/Project/loadcell_indicator_rs232/loadcell_indicator_rs232.pro</value>
-    <value type="QString" key="ProjectExplorer.RunConfiguration.BuildKey">/home/keti/Project/loadcell_indicator_rs232/loadcell_indicator_rs232.pro</value>
+    <value type="QString" key="ProjectExplorer.ProjectConfiguration.Id">Qt4ProjectManager.Qt4RunConfiguration:/home/keti/Project/ftsensor_test/loadcell_indicator_rs232.pro</value>
+    <value type="QString" key="ProjectExplorer.RunConfiguration.BuildKey">/home/keti/Project/ftsensor_test/loadcell_indicator_rs232.pro</value>
     <value type="QString" key="RunConfiguration.Arguments"></value>
     <value type="bool" key="RunConfiguration.Arguments.multi">false</value>
     <value type="QString" key="RunConfiguration.OverrideDebuggerStartup"></value>

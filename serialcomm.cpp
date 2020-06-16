@@ -19,7 +19,7 @@ bool SerialComm::connect(QString Port, QString Baud){
     serial->setParity(parity);
     serial->setStopBits(stop);
     serial->setFlowControl(flow);
-    stateConnect = serial->open(QIODevice::ReadOnly);
+    stateConnect = serial->open(QIODevice::ReadWrite);
     if (stateConnect) {
         qDebug() << "Connected to " + name + " : " + QString::number(baud) + ", " +
                     QString::number(bit) + ", " + QString::number(parity) + ", " +

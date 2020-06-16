@@ -1,4 +1,4 @@
-QT       += core gui widgets serialport printsupport
+QT += core gui widgets serialport printsupport
 
 CONFIG += c++11
 
