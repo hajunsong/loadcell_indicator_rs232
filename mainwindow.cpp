@@ -62,34 +62,99 @@ void MainWindow::btnConnectClicked()
 void MainWindow::readyRead(){
 	ui->rbComState->toggle();
 
-	QByteArray rxData = comm->serial->readAll();
-	if (rxData.length() == 10){
-		qDebug() << rxData.split('\r')[0].toDouble();
-		x.push_back(time);
-        y.push_back(rxData.split('\r')[0].toDouble()*9.80665);
-		time += 0.01;
+    QByteArray rxData = comm->serial->readAll();
+//    qDebug() << rxData;
+//    unsigned char uart_rx_buffer[100]; // receive buffer for uart communication
+    vector<unsigned char> uart_rx_buffer;
+    for(int i = 0; i < rxData.length(); i++){
+        uart_rx_buffer.push_back(static_cast<unsigned char>(rxData.at(i)));
+    }
+    if(rxData.at(0) == 0x55){
+//        qDebug() << "check SOP";
+        if(rxData.at(1) == 0x0b){
+//            qDebug() << "check ID";
+            unsigned char data_field[16]; // storage buffer for data field
+            // check the SOP, EOP, Checksum of received UART data
+            // SOP == 0x55, EOP == 0xAA, Checksum == summation of each data in data_field
+            // Save the data field's data in data field buffer
+            for(unsigned int idx = 0; idx < 16; idx++){
+                data_field[idx] = uart_rx_buffer[idx + 1]; //in case that rx_buffer[0] is SOP
+            }
+            // data field processing
+            short raw_data[6] = { 0 };
+            unsigned short temp;
+            unsigned DF=50, DT=1000; // DF, DT depend on the model, refer to 3.6.11
+//            // response ID checking
+//            if( (data_field[0] != 10) || (data_field[0] != 11) )
+//                return;
+            for (int idx = 0; idx < 6; idx++)
+            {
+                temp = data_field [2 * idx + 1] * 256;
+                temp += data_field [2 * idx + 2];
+                raw_data[idx] = static_cast<signed short>(temp); // casting process
+            }
+            // Conversion from signed short data to float data and data scaling
+            // Set Force/Torque Original
+            double ft_array[6];
+            for (int n = 0; n < 3; n++)
+            {
+                ft_array[n] = ((static_cast<double>(raw_data[n]))/DF);
+                ft_array[n + 3] = ((static_cast<double>(raw_data[n + 3]))/DT);
+            }
 
-		ui->plot->graph(0)->setData(x, y);
-		vector<double> x_temp, y_temp;
-		x_temp = x.toStdVector();
-		y_temp = y.toStdVector();
-		sort(y_temp.begin(), y_temp.end());
+            double Fx = ft_array[0];
+            double Fy = ft_array[1];
+            double Fz = ft_array[2];
+            double Tx = ft_array[3];
+            double Ty = ft_array[4];
+            double Tz = ft_array[5];
 
-		ui->plot->xAxis->setRange(x_temp.front(), x_temp.back());
-		ui->plot->yAxis->setRange(y_temp.front(), y_temp.back());
+            printf("\t%f\t%f\t%f\t%f\t%f\t %f\n", Fx, Fy, Fz, Tx, Ty, Tz);
+        }
+    }
 
-		ui->plot->replot();
-	}
 }
 
 void MainWindow::btnStartClicked(){
 	if(ui->btnStart->text().compare("Start") == 0){
 		connect(comm->serial, SIGNAL(readyRead()), this, SLOT(readyRead()));
 		ui->btnStart->setText("Stop");
+
+        QByteArray txData;
+        txData.append(QByteArray::fromRawData("\x55", 1));
+        txData.append(QByteArray::fromRawData("\x0b", 1));
+        txData.append(QByteArray::fromRawData("\x00", 1));
+        txData.append(QByteArray::fromRawData("\x00", 1));
+        txData.append(QByteArray::fromRawData("\x00", 1));
+        txData.append(QByteArray::fromRawData("\x00", 1));
+        txData.append(QByteArray::fromRawData("\x00", 1));
+        txData.append(QByteArray::fromRawData("\x00", 1));
+        txData.append(QByteArray::fromRawData("\x00", 1));
+        txData.append(QByteArray::fromRawData("\x0b", 1));
+        txData.append(QByteArray::fromRawData("\xAA", 1));
+
+//        QByteArray txData = QByteArray::fromRawData("\x55\x0b\x00\x00\x00\x00\x00\x00\x00\x0b\xAA", 11);
+        comm->serial->write(txData);
+        qDebug() << txData.toHex();
 	}
 	else if(ui->btnStart->text().compare("Stop") == 0){
 		disconnect(comm->serial, SIGNAL(readyRead()), this, SLOT(readyRead()));
 		ui->btnStart->setText("Start");
+
+        QByteArray txData;
+        txData.append(QByteArray::fromRawData("\x55", 1));
+        txData.append(QByteArray::fromRawData("\x0c", 1));
+        txData.append(QByteArray::fromRawData("\x00", 1));
+        txData.append(QByteArray::fromRawData("\x00", 1));
+        txData.append(QByteArray::fromRawData("\x00", 1));
+        txData.append(QByteArray::fromRawData("\x00", 1));
+        txData.append(QByteArray::fromRawData("\x00", 1));
+        txData.append(QByteArray::fromRawData("\x00", 1));
+        txData.append(QByteArray::fromRawData("\x00", 1));
+        txData.append(QByteArray::fromRawData("\x0c", 1));
+        txData.append(QByteArray::fromRawData("\xAA", 1));
+        comm->serial->write(txData);
+        qDebug() << txData.toHex();
 	}
 }
 
